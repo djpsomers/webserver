@@ -1,4 +1,5 @@
 import static org.gradle.api.JavaVersion.VERSION_21
+import static org.gradle.api.file.DuplicatesStrategy.EXCLUDE
 
 plugins {
     id 'idea'
@@ -15,10 +16,24 @@ java {
     targetCompatibility = VERSION_21
 }
 
+dependencies {
+    implementation (
+        'org.eclipse.jetty:jetty-server:12.0.9'
+    )
+}
+
+tasks.register('copyDependencies', Copy) {
+    from configurations.runtimeClasspath.files.collect { it }
+    into project.layout.buildDirectory.dir('libs').get().toString()
+    duplicatesStrategy = EXCLUDE
+}
+
 jar {
     manifest {
         attributes(
-                'Main-Class': 'com.example.Main'
+                'Main-Class': 'webserver.WebServer',
+                'Class-Path': configurations.runtimeClasspath.files.collect { it.name }.join(' ')
         )
     }
+    dependsOn 'copyDependencies'
 }
